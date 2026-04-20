@@ -1,0 +1,163 @@
+openapi: 3.0.0
+info:
+  title: Warehouse API
+  description: API for managing products in a warehouse
+  version: 1.0.0
+
+paths:
+  /warehouse:
+    get:
+      summary: List all warehouses units
+      responses:
+        '200':
+          description: A list of warehouse units
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Warehouse'
+
+    post:
+      summary: Create a new warehouse unit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Warehouse'
+      responses:
+        '201':
+          description: Warehouse unit created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        '400':
+          description: Invalid request parameters
+
+  /warehouse/{id}:
+    get:
+      summary: Get a warehouse unit by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the warehouse unit to get
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Warehouse unit found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        '404':
+          description: Warehouse unit not found
+
+    delete:
+      summary: Archive a warehouse unit by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the warehouse unit to archive
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Warehouse unit archived
+        '404':
+          description: Warehouse unit not found
+
+  /warehouse/{businessUnitCode}/replacement:
+    post:
+      summary: Replace the current active Warehouse
+      description: |
+        Replaces the current active Warehouse identified by `businessUnitCode`
+        by a new Warehouse provided in the request body.
+        The previous Warehouse will be archived and the new one will be created
+        assuming its place.
+      parameters:
+        - name: businessUnitCode
+          in: path
+          required: true
+          description: Business unit code of the warehouse unit to replace
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Warehouse'
+      responses:
+        '200':
+          description: Warehouse unit replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+        '404':
+          description: Warehouse unit not found
+        '400':
+          description: Invalid request parameters
+
+  # ✅ ADDITIVE – Fulfilment (no impact on Warehouse)
+  /fulfilment:
+    post:
+      summary: Assign warehouse to product for a store
+      description: >
+        Assigns a warehouse as a fulfilment unit for a given product
+        in a store. All fulfilment business rules are validated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FulfilmentAssignmentRequest'
+      responses:
+        '204':
+          description: Fulfilment assignment created
+        '400':
+          description: Invalid fulfilment request
+
+components:
+  schemas:
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "456"
+        businessUnitCode:
+          type: string
+          example: "MWH.001"
+        location:
+          type: string
+          example: "AMSTERDAM-001"
+        capacity:
+          type: integer
+          example: 100
+        stock:
+          type: integer
+          example: 50
+
+    # ✅ NEW – Fulfilment DTO
+    FulfilmentAssignmentRequest:
+      type: object
+      required:
+        - storeId
+        - productId
+        - warehouseBusinessUnitCode
+      properties:
+        storeId:
+          type: string
+          example: "STORE-001"
+        productId:
+          type: string
+          example: "PRODUCT-123"
+        warehouseBusinessUnitCode:
+          type: string
+          example: "MWH.001"
