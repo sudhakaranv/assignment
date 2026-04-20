@@ -28,6 +28,8 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      # 3️⃣ Build with Maven
+      # 3️⃣ Build Quarkus application (inside java-assignment)
       - name: Build Quarkus application
+        working-directory: java-assignment
         run: mvn -B clean verify
+``
